@@ -198,6 +198,23 @@ from scratch later:
     publicly guessable URL
   - Decide later whether to add physical prints via a print-on-demand
     service (e.g. Printful/Prodigi) — explicitly deferred, not decided against
+- **"Experiments" → "Connections" rename/reframe** (idea logged 2026-07-04,
+  not started — user said "eventually"): two distinct sub-features under
+  one new name:
+  - **Account linking** — Steam, Discord, Riot ID shown as "connections"
+    on a visitor's profile. Natural extension of the Supabase auth plan
+    above, not a separate system. Discord and Steam both have self-serve
+    OAuth/OpenID. **Riot is different**: "Sign in with Riot" (RSO)
+    requires applying to Riot Games for an approved production API key —
+    a manual review on their end, not a flip-a-switch integration. Flag
+    this before committing to a timeline that includes it.
+  - **Photobooth / selfie sharing** — user is undecided whether the
+    sketch-pad experiment survives the rename. Real open question before
+    building: is a submitted photo private-to-the-visitor, or visible to
+    others (fitting the WoW-style presence idea)? The latter is
+    user-generated content and needs a moderation plan, not just a
+    camera API call (`getUserMedia`) — don't build the "visible to
+    others" version without deciding this first.
 - **Web scraper → curated gallery** (e.g. Marvel/anime images) — should run
   as a separate scheduled job (Vercel Cron if staying on Vercel, or a
   cron/systemd timer if self-hosted), writing to object storage + a

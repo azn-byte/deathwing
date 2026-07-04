@@ -36,15 +36,18 @@ app/
   page.js                    Home page — see "Homepage" below, not a nav summary
   gallery/page.js             Gallery — reads images from public/images/gallery
   prints/page.js               Prints storefront — lists photos from lib/prints.js
-  experiments/page.js         List of experiments (edit the `experiments` array to add more)
-  experiments/sketch-pad/     Example experiment: canvas drawing toy
+  connect/page.js              Profile card + list of experiments (renamed from "Experiments")
+  connect/sketch-pad/          Example experiment: canvas drawing toy
   enter/page.js                Character-creation "login" (see below)
-components/Nav.js             Top nav bar — shows current visitor handle if one exists
+components/Nav.js             Top nav bar
+components/VisitorBadge.js    Persistent bottom-right badge, shown site-wide once a profile exists
+components/ProfileCard.js     Full profile display, used on /connect
 components/PrintCard.js       Prints storefront card — license toggle + price display
 components/HomeSketchTeaser.js  Live drawable canvas embedded on the homepage
 lib/images.js                 Reads public/images/gallery at request time for the gallery page
 lib/prints.js                 Manually curated list of photos for sale (image + price + license terms)
 lib/session.js                Client-side-only visitor session (localStorage) — see below
+lib/connections.js            CRM-style profile field definitions (see below)
 public/images/gallery/        Drop image files here — they show up in the gallery automatically
 public/images/prints/         Photos listed on /prints (must also be added to lib/prints.js)
 ```
@@ -68,7 +71,6 @@ instead of a boring form: pick a handle, pick a path (Collector / Creator /
 Wanderer). **Status: local-only, no real backend.** It writes to
 `localStorage` via `lib/session.js` so it remembers you on one device —
 there is no account, no server, and nothing is shared between visitors yet.
-The nav shows your handle in place of "Enter" once you've done this once.
 
 Also includes an optional "Connections" step (`lib/connections.js`) — CRM
 style, plain self-reported text fields (League of Legends summoner name,
@@ -77,6 +79,29 @@ viewing a profile rather than shown empty. Chosen deliberately over real
 OAuth for Steam/Discord/Riot because Riot's "Sign in with Riot" requires an
 approved production API key from Riot Games (manual review, not self-serve)
 — manual text fields work today for all three without waiting on that.
+
+Each profile also gets a `generateSessionId()` ID (`lib/session.js`) —
+labeled as a per-browser session ID, not a global visitor count, since
+there's no backend to actually count visitors yet. Don't let this drift
+into implying real visitor numbers before Supabase exists.
+
+### Connect (`/connect`, renamed from "Experiments" 2026-07-04)
+
+Two things live here now, deliberately merged: the list of small built
+experiments (`Sketch Pad` at `/connect/sketch-pad`, same pattern as before
+for adding more), and a `ProfileCard` showing the current visitor's full
+profile — handle, path, session ID, and any filled-in connections. The
+idea: your `/enter` profile isn't siloed to one page, it's something that
+"tracks" you as you move through the site.
+
+That tracking is also visible site-wide now: `components/VisitorBadge.js`
+renders a small persistent badge in the bottom-right corner of every page
+once a profile exists, linking back to `/connect`. Nav no longer shows the
+handle itself (that moved to the badge) — nav's "Enter" link is just the
+entry point to create/edit a profile.
+
+**Naming is still fluid** — "Connect" is what we're calling this for now
+while the look and feel gets figured out; expect it might change again.
 
 This is step one of a three-part idea (discussed 2026-07-04, not yet built
 beyond this UI):
@@ -206,16 +231,17 @@ from scratch later:
     publicly guessable URL
   - Decide later whether to add physical prints via a print-on-demand
     service (e.g. Printful/Prodigi) — explicitly deferred, not decided against
-- **"Experiments" → "Connections" rename/reframe** (idea logged 2026-07-04):
-  two distinct sub-features under one new name:
-  - **Account linking (started 2026-07-04):** shipped as plain CRM-style
-    text fields on `/enter` — see "Visitor profile / login" above. This is
-    the pragmatic v1, not the final form. Still true and still relevant
-    for later: real OAuth (Steam self-serve, Discord via Supabase Auth)
-    would let these be verified instead of self-reported, and **Riot
-    specifically** requires an approved production API key from Riot
-    Games (manual review, not self-serve) if that upgrade ever happens.
-    Not blocking anything today since the text-field version works now.
+- **"Experiments" → "Connect" rename/reframe** (idea logged 2026-07-04,
+  route renamed same day — see "Connect" section above): two distinct
+  sub-features under one name:
+  - **Account linking + persistent profile (built 2026-07-04):** CRM-style
+    text fields on `/enter`, now also surfaced on `/connect` via
+    `ProfileCard` and site-wide via `VisitorBadge`. This is the pragmatic
+    v1, not the final form. Still relevant for later: real OAuth (Steam
+    self-serve, Discord via Supabase Auth) would let these be verified
+    instead of self-reported, and **Riot specifically** requires an
+    approved production API key from Riot Games (manual review, not
+    self-serve) if that upgrade ever happens. Not blocking anything today.
   - **Photo challenges with approval queue** (refined 2026-07-04, not
     started, explicitly deferred by user — "let's figure that out later"):
     not open UGC. The real shape: user posts a topic for a recurring photo

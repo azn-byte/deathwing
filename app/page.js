@@ -92,16 +92,16 @@ export default function Home() {
       <section className="grid gap-6 border-t border-white/10 px-6 py-20 sm:px-10 lg:grid-cols-12 lg:items-start lg:px-14">
         <div className="lg:col-span-4">
           <p className="font-mono text-xs uppercase tracking-widest text-white/40">
-            Experiments
+            Connect
           </p>
           <h2 className="mt-3 text-2xl font-medium tracking-tight">
             Small things, built to learn.
           </h2>
           <Link
-            href="/experiments"
+            href="/connect"
             className="mt-4 inline-block text-sm text-white/70 underline underline-offset-4 hover:text-white"
           >
-            See all experiments →
+            See what's there →
           </Link>
         </div>
         <div className="lg:col-span-8">

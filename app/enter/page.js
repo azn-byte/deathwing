@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, saveSession } from "@/lib/session";
+import { getSession, saveSession, generateSessionId } from "@/lib/session";
 import { CONNECTIONS } from "@/lib/connections";
 
 const PATHS = [
@@ -19,7 +19,7 @@ const PATHS = [
   {
     id: "wanderer",
     label: "Wanderer",
-    tagline: "You're just here to poke at the experiments.",
+    tagline: "You're just here to poke at what's there.",
   },
 ];
 
@@ -46,6 +46,7 @@ export default function EnterPage() {
       Object.entries(connections).map(([k, v]) => [k, v.trim()])
     );
     saveSession({
+      id: generateSessionId(),
       handle: handle.trim(),
       path,
       connections: trimmedConnections,
@@ -71,6 +72,9 @@ export default function EnterPage() {
           Welcome back, {existing.handle}.
         </h1>
         <p className="mt-2 text-white/50">Logged in as the {pathLabel}.</p>
+        {existing.id && (
+          <p className="mt-1 font-mono text-xs text-white/30">ID {existing.id}</p>
+        )}
 
         <div className="mt-8 text-left">
           <p className="font-mono text-xs uppercase tracking-widest text-white/40">

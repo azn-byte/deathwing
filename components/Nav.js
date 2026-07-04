@@ -2,23 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getSession } from "@/lib/session";
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/gallery", label: "Gallery" },
   { href: "/prints", label: "Prints" },
-  { href: "/experiments", label: "Experiments" },
+  { href: "/connect", label: "Connect" },
 ];
 
 export default function Nav() {
   const pathname = usePathname();
-  const [session, setSession] = useState(null);
-
-  useEffect(() => {
-    setSession(getSession());
-  }, [pathname]);
 
   return (
     <header className="flex items-center justify-between px-6 py-8 sm:px-10 lg:px-14">
@@ -42,7 +35,7 @@ export default function Nav() {
           href="/enter"
           className={pathname === "/enter" ? "text-white" : "text-white/50 hover:text-white"}
         >
-          {session ? session.handle : "Enter"}
+          Enter
         </Link>
       </nav>
     </header>

@@ -7,7 +7,7 @@ export default function PrintCard({ print }) {
   const price = license === "personal" ? print.personalPrice : print.commercialPrice;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+    <div className="overflow-hidden rounded-sm border border-white/10">
       <img
         src={`/images/prints/${print.file}`}
         alt={print.title}
@@ -16,7 +16,7 @@ export default function PrintCard({ print }) {
       <div className="p-4">
         <h2 className="font-medium">{print.title}</h2>
         {print.description && (
-          <p className="mt-1 text-sm text-neutral-500">{print.description}</p>
+          <p className="mt-1 text-sm text-white/50">{print.description}</p>
         )}
 
         <div className="mt-4 flex gap-2 text-sm">
@@ -24,8 +24,8 @@ export default function PrintCard({ print }) {
             onClick={() => setLicense("personal")}
             className={`rounded-full border px-3 py-1.5 ${
               license === "personal"
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-neutral-300 dark:border-neutral-700"
+                ? "border-white bg-white text-black"
+                : "border-white/20 text-white/70"
             }`}
           >
             Personal use
@@ -34,8 +34,8 @@ export default function PrintCard({ print }) {
             onClick={() => setLicense("commercial")}
             className={`rounded-full border px-3 py-1.5 ${
               license === "commercial"
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-neutral-300 dark:border-neutral-700"
+                ? "border-white bg-white text-black"
+                : "border-white/20 text-white/70"
             }`}
           >
             Commercial use
@@ -47,7 +47,7 @@ export default function PrintCard({ print }) {
           <button
             disabled
             title="Checkout isn't wired up yet — coming once Stripe is connected"
-            className="cursor-not-allowed rounded-full bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-500 dark:bg-neutral-800 dark:text-neutral-500"
+            className="cursor-not-allowed rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-500"
           >
             Buy — coming soon
           </button>

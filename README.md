@@ -3,6 +3,17 @@
 Personal "lab" site — image gallery + small interactive experiments, built
 with Next.js (App Router) + Tailwind CSS v4.
 
+## Design direction
+
+Fixed dark theme (always black background, not tied to system light/dark
+preference — see `app/globals.css`), bold asymmetrical typography, and
+real photography/art treated as hero content rather than decoration.
+Modeled after [bymonolog.com](https://bymonolog.com) after comparing it
+against three other reference sites (Yann Novak's portfolio, units.gr,
+wembi.ai) for style direction — see conversation history for the other
+three, kept only as a decision record since their mockups were removed
+from the repo once this direction was picked.
+
 ## Live site
 
 https://deathwing-three.vercel.app

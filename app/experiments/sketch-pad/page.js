@@ -42,9 +42,9 @@ export default function SketchPad() {
   };
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-12">
-      <h1 className="text-3xl font-semibold mb-2">Sketch Pad</h1>
-      <p className="mb-6 text-neutral-500">
+    <section className="mx-auto max-w-3xl px-6 py-12 sm:px-10 lg:px-14">
+      <h1 className="mb-2 text-4xl font-medium tracking-tight">Sketch Pad</h1>
+      <p className="mb-6 text-white/50">
         Click and drag on the canvas to draw. A tiny example of an
         interactive page.
       </p>
@@ -54,11 +54,11 @@ export default function SketchPad() {
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
-          className="h-9 w-9 cursor-pointer rounded border border-neutral-300 dark:border-neutral-700"
+          className="h-9 w-9 cursor-pointer rounded border border-white/20"
         />
         <button
           onClick={clear}
-          className="rounded-full border border-neutral-300 px-4 py-1.5 text-sm dark:border-neutral-700"
+          className="rounded-full border border-white/20 px-4 py-1.5 text-sm"
         >
           Clear
         </button>
@@ -68,7 +68,7 @@ export default function SketchPad() {
         ref={canvasRef}
         width={640}
         height={420}
-        className="w-full touch-none rounded-lg border border-neutral-200 bg-white dark:border-neutral-800"
+        className="w-full touch-none rounded-sm border border-white/10 bg-white"
         onMouseDown={start}
         onMouseMove={move}
         onMouseUp={stop}

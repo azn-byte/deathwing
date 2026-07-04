@@ -33,7 +33,7 @@ Open http://localhost:3000.
 
 ```
 app/
-  page.js                    Home page
+  page.js                    Home page — see "Homepage" below, not a nav summary
   gallery/page.js             Gallery — reads images from public/images/gallery
   prints/page.js               Prints storefront — lists photos from lib/prints.js
   experiments/page.js         List of experiments (edit the `experiments` array to add more)
@@ -41,12 +41,24 @@ app/
   enter/page.js                Character-creation "login" (see below)
 components/Nav.js             Top nav bar — shows current visitor handle if one exists
 components/PrintCard.js       Prints storefront card — license toggle + price display
+components/HomeSketchTeaser.js  Live drawable canvas embedded on the homepage
 lib/images.js                 Reads public/images/gallery at request time for the gallery page
 lib/prints.js                 Manually curated list of photos for sale (image + price + license terms)
 lib/session.js                Client-side-only visitor session (localStorage) — see below
 public/images/gallery/        Drop image files here — they show up in the gallery automatically
 public/images/prints/         Photos listed on /prints (must also be added to lib/prints.js)
 ```
+
+### Homepage (`app/page.js`)
+
+Deliberately not a "here are links to the other 3 pages" summary (decided
+2026-07-04, after that read as rushing visitors elsewhere). It's a paced
+sequence of distinct moments instead: a headline that gets room to breathe
+alone, one real gallery image shown as a "currently pinned" spotlight (not
+a grid), an honest Prints teaser that says the shop is empty rather than
+faking inventory, and a live drawable canvas for Experiments so there's
+something to actually *do* on the homepage, not just read about. Each
+section links out in its own voice rather than a repeated CTA block.
 
 ### Visitor profile / "login" (`/enter`)
 

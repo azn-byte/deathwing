@@ -70,6 +70,14 @@ Wanderer). **Status: local-only, no real backend.** It writes to
 there is no account, no server, and nothing is shared between visitors yet.
 The nav shows your handle in place of "Enter" once you've done this once.
 
+Also includes an optional "Connections" step (`lib/connections.js`) — CRM
+style, plain self-reported text fields (League of Legends summoner name,
+Discord, Steam), not OAuth-verified. Blank fields are simply omitted when
+viewing a profile rather than shown empty. Chosen deliberately over real
+OAuth for Steam/Discord/Riot because Riot's "Sign in with Riot" requires an
+approved production API key from Riot Games (manual review, not self-serve)
+— manual text fields work today for all three without waiting on that.
+
 This is step one of a three-part idea (discussed 2026-07-04, not yet built
 beyond this UI):
 1. This character-creation UI (done)
@@ -198,17 +206,17 @@ from scratch later:
     publicly guessable URL
   - Decide later whether to add physical prints via a print-on-demand
     service (e.g. Printful/Prodigi) — explicitly deferred, not decided against
-- **"Experiments" → "Connections" rename/reframe** (idea logged 2026-07-04,
-  not started — user said "eventually"): two distinct sub-features under
-  one new name:
-  - **Account linking** — Steam, Discord, Riot ID shown as "connections"
-    on a visitor's profile. Natural extension of the Supabase auth plan
-    above, not a separate system. Discord and Steam both have self-serve
-    OAuth/OpenID. **Riot is different**: "Sign in with Riot" (RSO)
-    requires applying to Riot Games for an approved production API key —
-    a manual review on their end, not a flip-a-switch integration. Flag
-    this before committing to a timeline that includes it.
-  - **Photobooth / selfie sharing** — user is undecided whether the
+- **"Experiments" → "Connections" rename/reframe** (idea logged 2026-07-04):
+  two distinct sub-features under one new name:
+  - **Account linking (started 2026-07-04):** shipped as plain CRM-style
+    text fields on `/enter` — see "Visitor profile / login" above. This is
+    the pragmatic v1, not the final form. Still true and still relevant
+    for later: real OAuth (Steam self-serve, Discord via Supabase Auth)
+    would let these be verified instead of self-reported, and **Riot
+    specifically** requires an approved production API key from Riot
+    Games (manual review, not self-serve) if that upgrade ever happens.
+    Not blocking anything today since the text-field version works now.
+  - **Photobooth / selfie sharing** (not started) — user is undecided whether the
     sketch-pad experiment survives the rename. Real open question before
     building: is a submitted photo private-to-the-visitor, or visible to
     others (fitting the WoW-style presence idea)? The latter is

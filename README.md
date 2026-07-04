@@ -216,13 +216,29 @@ from scratch later:
     specifically** requires an approved production API key from Riot
     Games (manual review, not self-serve) if that upgrade ever happens.
     Not blocking anything today since the text-field version works now.
-  - **Photobooth / selfie sharing** (not started) — user is undecided whether the
-    sketch-pad experiment survives the rename. Real open question before
-    building: is a submitted photo private-to-the-visitor, or visible to
-    others (fitting the WoW-style presence idea)? The latter is
-    user-generated content and needs a moderation plan, not just a
-    camera API call (`getUserMedia`) — don't build the "visible to
-    others" version without deciding this first.
+  - **Photo challenges with approval queue** (refined 2026-07-04, not
+    started, explicitly deferred by user — "let's figure that out later"):
+    not open UGC. The real shape: user posts a topic for a recurring photo
+    challenge, visitors submit a photo for that topic, submissions sit in
+    a private moderation queue, and only the user (via their own
+    approve/deny portal) can publish one — nothing goes live
+    automatically. This is a meaningfully safer model than "anyone can
+    post publicly," so the earlier "don't build without a moderation
+    plan" caution is resolved in principle — there IS a plan now, it's
+    just not built.
+    - Needs: photo upload/storage (not just `getUserMedia` capture —
+      submissions must persist until reviewed), a submissions table
+      (topic, submitter, status: pending/approved/denied), and an
+      admin-only view gated to the user specifically, not any visitor —
+      i.e. this needs the real auth plan (Supabase) to distinguish "the
+      owner" from "a visitor," not just a handle in `/enter`.
+    - User already runs a Discord server with defined roles/permissions
+      for this kind of thing — worth reusing that structure (e.g. a
+      Discord role determines who can submit, or mirrors moderator
+      permissions) once Discord OAuth is wired up, rather than building
+      a separate permissions system from scratch.
+    - Still undecided whether the sketch-pad experiment survives the
+      Experiments → Connections rename.
 - **Web scraper → curated gallery** (e.g. Marvel/anime images) — should run
   as a separate scheduled job (Vercel Cron if staying on Vercel, or a
   cron/systemd timer if self-hosted), writing to object storage + a

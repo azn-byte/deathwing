@@ -12,7 +12,9 @@ Modeled after [bymonolog.com](https://bymonolog.com) after comparing it
 against three other reference sites (Yann Novak's portfolio, units.gr,
 wembi.ai) for style direction — see conversation history for the other
 three, kept only as a decision record since their mockups were removed
-from the repo once this direction was picked.
+from the repo once this direction was picked. This is the baseline for
+every page — the homepage additionally layers its own "system" identity
+on top, see below.
 
 ## Live site
 
@@ -39,8 +41,10 @@ app/
   connect/page.js              Profile card + list of experiments (renamed from "Experiments")
   connect/sketch-pad/          Example experiment: canvas drawing toy
   enter/page.js                Character-creation "login" (see below)
-components/Nav.js             Top nav bar
+components/Nav.js             Top nav bar — adds top margin on "/" to clear the fixed ticker
 components/VisitorBadge.js    Persistent bottom-right badge, shown site-wide once a profile exists
+                                (sits higher on "/" to clear the fixed status bar)
+components/HomeExperience.js  The homepage's "system" identity — see below
 components/ProfileCard.js     Full profile display, used on /connect
 components/PrintCard.js       Prints storefront card — license toggle + price display
 components/HomeSketchTeaser.js  Live drawable canvas embedded on the homepage
@@ -52,16 +56,44 @@ public/images/gallery/        Drop image files here — they show up in the gall
 public/images/prints/         Photos listed on /prints (must also be added to lib/prints.js)
 ```
 
-### Homepage (`app/page.js`)
+### Homepage (`app/page.js` + `components/HomeExperience.js`)
 
 Deliberately not a "here are links to the other 3 pages" summary (decided
 2026-07-04, after that read as rushing visitors elsewhere). It's a paced
 sequence of distinct moments instead: a headline that gets room to breathe
-alone, one real gallery image shown as a "currently pinned" spotlight (not
-a grid), an honest Prints teaser that says the shop is empty rather than
-faking inventory, and a live drawable canvas for Experiments so there's
-something to actually *do* on the homepage, not just read about. Each
-section links out in its own voice rather than a repeated CTA block.
+alone, a few real gallery images shown as a "currently pinned" spotlight
+at their natural uncropped aspect ratio (not a forced-crop grid), an
+honest Prints teaser that says the shop is empty rather than faking
+inventory, and a live drawable canvas for Connect so there's something to
+actually *do* on the homepage, not just read about. Each section links
+out in its own voice rather than a repeated CTA block.
+
+**The homepage additionally has its own "system" visual identity**, on top
+of the site's base dark theme, that no other page has (decided
+2026-07-04 — inspired by Ghost in the Shell / Matrix framing, explicitly
+kept monochrome after magenta+cyan read as "too Cyberpunk 2077 / Miami
+Vice" and green read as "too Matrix cliché"):
+- A live scroll-triggered ticker fixed to the very top of the viewport
+  and a small stats readout fixed to the bottom — both stay put while
+  everything else scrolls underneath, so more sections can be added
+  later without disturbing them.
+- The stats are real, not decorative: gallery piece count comes from
+  `getGalleryImages().length`, not a hardcoded number.
+- The hero headline is dynamic: reads real session data
+  (`lib/session.js`) to show "Welcome back, {handle}" if a profile
+  exists, or an invite ("Images, curated and made.") if not.
+- A grayscale-only "glitch" effect on the headline — two offset light/
+  dark-grey duplicate layers that flicker briefly on a timer, plus a
+  custom cursor-follow ring — texture and motion carry the "system" feel
+  instead of any color, on purpose.
+- `Nav` and `VisitorBadge` both special-case `pathname === "/"` to make
+  room for the fixed ticker/status bar. If either component's spacing
+  looks wrong on the homepage, check those conditionals first.
+
+This is intentionally homepage-only — Gallery and Prints stay on the
+plain base theme so the "system" chrome never competes with viewing
+images or buying a print. Don't apply the ticker/status-bar/glitch
+treatment to other pages without deciding that deliberately.
 
 ### Visitor profile / "login" (`/enter`)
 

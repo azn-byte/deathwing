@@ -12,9 +12,14 @@ const links = [
 
 export default function Nav() {
   const pathname = usePathname();
+  const isHome = pathname === "/";
 
   return (
-    <header className="flex items-center justify-between px-6 py-8 sm:px-10 lg:px-14">
+    <header
+      className={`flex items-center justify-between px-6 py-8 sm:px-10 lg:px-14 ${
+        isHome ? "mt-9" : ""
+      }`}
+    >
       <Link href="/" className="text-sm font-medium tracking-tight">
         the lab
       </Link>

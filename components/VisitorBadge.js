@@ -22,11 +22,14 @@ export default function VisitorBadge() {
   if (!session) return null;
 
   const pathLabel = PATH_LABELS[session.path] ?? session.path;
+  const isHome = pathname === "/";
 
   return (
     <Link
       href="/connect"
-      className="fixed bottom-6 right-6 z-50 rounded-full border border-white/15 bg-black/80 px-4 py-2 font-mono text-xs text-white/60 backdrop-blur transition hover:border-white/30 hover:text-white"
+      className={`fixed right-6 z-50 rounded-full border border-white/15 bg-black/80 px-4 py-2 font-mono text-xs text-white/60 backdrop-blur transition hover:border-white/30 hover:text-white ${
+        isHome ? "bottom-14" : "bottom-6"
+      }`}
     >
       {session.handle} · {pathLabel}
       {session.id && <span className="text-white/30"> · {session.id}</span>}

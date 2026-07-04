@@ -231,6 +231,12 @@ from scratch later:
     publicly guessable URL
   - Decide later whether to add physical prints via a print-on-demand
     service (e.g. Printful/Prodigi) — explicitly deferred, not decided against
+  - **Ownership assumption (decided 2026-07-04):** anything listed on
+    `/prints` is assumed to be the user's own original work that they
+    created and own. A watermark / "quality seal" badge overlay on print
+    thumbnails was tried in an early theme mockup but explicitly removed —
+    "not ready for that yet." Keep the idea for later, don't re-add
+    without asking first.
 - **"Experiments" → "Connect" rename/reframe** (idea logged 2026-07-04,
   route renamed same day — see "Connect" section above): two distinct
   sub-features under one name:

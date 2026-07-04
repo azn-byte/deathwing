@@ -111,13 +111,23 @@ from scratch later:
 
 - **Discord link** — simplest: a link/button. Optional stretch: "sign in
   with Discord" via Auth.js.
-- **Ecommerce** — needs a database (products/orders) + Stripe Checkout +
-  webhook for order fulfillment. Nothing exists yet.
-- **Web scraper → gallery** (e.g. anime/DBZ images) — should run as a
-  separate scheduled job (Vercel Cron if staying on Vercel, or a cron/systemd
-  timer if self-hosted), writing to object storage + a database, not into
-  `public/images/gallery` directly. This is the change that also fixes the
-  "images require a redeploy to appear" limitation above.
+- **Two separate galleries, not one** (decided 2026-07-04): the current
+  `/gallery` is a curated/fan-art gallery (Marvel, anime, etc.) — read-only,
+  eventually scraper-fed. Personal photography is a different thing
+  entirely: each image needs price, print size options, and licensing
+  terms, plus a checkout flow — that's a commerce feature, not a gallery
+  feature. Keep them as separate routes (e.g. `/gallery` stays curated,
+  something like `/prints` or `/shop` becomes the photo storefront) so they
+  can evolve independently instead of forcing one data model to fit both.
+- **Ecommerce** (for the personal-photo storefront above) — needs a
+  database (products/orders, with per-photo price + licensing terms) +
+  Stripe Checkout + a webhook for order fulfillment. Nothing exists yet.
+- **Web scraper → curated gallery** (e.g. Marvel/anime images) — should run
+  as a separate scheduled job (Vercel Cron if staying on Vercel, or a
+  cron/systemd timer if self-hosted), writing to object storage + a
+  database, not into `public/images/gallery` directly. This is the change
+  that also fixes the "images require a redeploy to appear" limitation
+  above.
 - Once a scraper or ecommerce exists, the app needs a real database
   (e.g. Postgres via Neon/Supabase, or self-hosted Postgres) — there is
   currently no database anywhere in this project.

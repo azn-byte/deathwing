@@ -24,11 +24,15 @@ Open http://localhost:3000.
 app/
   page.js                    Home page
   gallery/page.js             Gallery — reads images from public/images/gallery
+  prints/page.js               Prints storefront — lists photos from lib/prints.js
   experiments/page.js         List of experiments (edit the `experiments` array to add more)
   experiments/sketch-pad/     Example experiment: canvas drawing toy
 components/Nav.js             Top nav bar
+components/PrintCard.js       Prints storefront card — license toggle + price display
 lib/images.js                 Reads public/images/gallery at request time for the gallery page
+lib/prints.js                 Manually curated list of photos for sale (image + price + license terms)
 public/images/gallery/        Drop image files here — they show up in the gallery automatically
+public/images/prints/         Photos listed on /prints (must also be added to lib/prints.js)
 ```
 
 ### Adding photos
@@ -50,6 +54,21 @@ This is the first thing to change if a scraper starts feeding the gallery
 3. Add an entry to the `experiments` array in `app/experiments/page.js` so it shows up in the list
 
 `sketch-pad` is a working example of this pattern.
+
+### Prints storefront (`/prints`)
+
+Sells digital licenses to personal photography — a personal-use license or
+a commercial-use license per photo, no physical print fulfillment. To list
+a photo:
+
+1. Add the image file to `public/images/prints/`
+2. Add a matching entry (title, description, `personalPrice`,
+   `commercialPrice`) to the `prints` array in `lib/prints.js`
+
+**Status: browsing UI only, checkout is not wired up yet.** The "Buy"
+button is intentionally disabled — it's a placeholder until a Stripe
+account exists and a checkout flow (and a way to actually deliver the
+purchased file) is built. See Roadmap below.
 
 ## Deployment
 
@@ -114,14 +133,21 @@ from scratch later:
 - **Two separate galleries, not one** (decided 2026-07-04): the current
   `/gallery` is a curated/fan-art gallery (Marvel, anime, etc.) — read-only,
   eventually scraper-fed. Personal photography is a different thing
-  entirely: each image needs price, print size options, and licensing
-  terms, plus a checkout flow — that's a commerce feature, not a gallery
-  feature. Keep them as separate routes (e.g. `/gallery` stays curated,
-  something like `/prints` or `/shop` becomes the photo storefront) so they
-  can evolve independently instead of forcing one data model to fit both.
-- **Ecommerce** (for the personal-photo storefront above) — needs a
-  database (products/orders, with per-photo price + licensing terms) +
-  Stripe Checkout + a webhook for order fulfillment. Nothing exists yet.
+  entirely: each image needs price and licensing terms, plus a checkout
+  flow — that's a commerce feature, not a gallery feature. Kept as a
+  separate route, `/prints`, so it can evolve independently.
+- **`/prints` storefront (in progress, started 2026-07-04):** browsing UI
+  and per-photo license selection (personal vs. commercial use) are built —
+  see the "Prints storefront" section above. Chose digital licenses over
+  physical print fulfillment to start (no printing/shipping logistics).
+  Still needed:
+  - A Stripe account (user hasn't created one yet) + Checkout integration
+  - A database for orders (who bought what license for which photo)
+  - A way to actually deliver the purchased file after payment — likely a
+    signed/expiring download link generated on successful payment, not a
+    publicly guessable URL
+  - Decide later whether to add physical prints via a print-on-demand
+    service (e.g. Printful/Prodigi) — explicitly deferred, not decided against
 - **Web scraper → curated gallery** (e.g. Marvel/anime images) — should run
   as a separate scheduled job (Vercel Cron if staying on Vercel, or a
   cron/systemd timer if self-hosted), writing to object storage + a

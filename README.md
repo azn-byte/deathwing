@@ -38,13 +38,35 @@ app/
   prints/page.js               Prints storefront — lists photos from lib/prints.js
   experiments/page.js         List of experiments (edit the `experiments` array to add more)
   experiments/sketch-pad/     Example experiment: canvas drawing toy
-components/Nav.js             Top nav bar
+  enter/page.js                Character-creation "login" (see below)
+components/Nav.js             Top nav bar — shows current visitor handle if one exists
 components/PrintCard.js       Prints storefront card — license toggle + price display
 lib/images.js                 Reads public/images/gallery at request time for the gallery page
 lib/prints.js                 Manually curated list of photos for sale (image + price + license terms)
+lib/session.js                Client-side-only visitor session (localStorage) — see below
 public/images/gallery/        Drop image files here — they show up in the gallery automatically
 public/images/prints/         Photos listed on /prints (must also be added to lib/prints.js)
 ```
+
+### Visitor profile / "login" (`/enter`)
+
+Inspired by [cybercafe.tw](https://cybercafe.tw) (a net-art piece styled as
+a 2000s internet cafe login) — a game-like "create your character" flow
+instead of a boring form: pick a handle, pick a path (Collector / Creator /
+Wanderer). **Status: local-only, no real backend.** It writes to
+`localStorage` via `lib/session.js` so it remembers you on one device —
+there is no account, no server, and nothing is shared between visitors yet.
+The nav shows your handle in place of "Enter" once you've done this once.
+
+This is step one of a three-part idea (discussed 2026-07-04, not yet built
+beyond this UI):
+1. This character-creation UI (done)
+2. Real auth — recommended: **Supabase**, so Auth + Postgres + Realtime
+   come from one service instead of three. Discord OAuth through Supabase
+   Auth would also satisfy the "link to Discord" roadmap item in one move.
+3. A live "N people here / browsing gallery / reading an experiment" HUD,
+   WoW-style — powered by Supabase Realtime Presence once real accounts
+   exist. Deliberately not faked with placeholder numbers in the meantime.
 
 ### Adding photos
 
@@ -139,8 +161,13 @@ plain `vercel` CLI commands shown above.
 Planned but not implemented — noting here so this doesn't get re-derived
 from scratch later:
 
-- **Discord link** — simplest: a link/button. Optional stretch: "sign in
-  with Discord" via Auth.js.
+- **Discord link** (superseded 2026-07-04): originally scoped as just a
+  link/button. Now folded into the auth plan below instead — Discord OAuth
+  via Supabase Auth covers "sign in with Discord" and the link in one step.
+- **Real auth + live presence** (started 2026-07-04): see "Visitor
+  profile / login" section above for what's built (`/enter`, local-only)
+  and the full 3-step plan (character UI → Supabase auth → WoW-style
+  live presence HUD). Steps 2 and 3 are not started.
 - **Two separate galleries, not one** (decided 2026-07-04): the current
   `/gallery` is a curated/fan-art gallery (Marvel, anime, etc.) — read-only,
   eventually scraper-fed. Personal photography is a different thing
@@ -165,6 +192,7 @@ from scratch later:
   database, not into `public/images/gallery` directly. This is the change
   that also fixes the "images require a redeploy to appear" limitation
   above.
-- Once a scraper or ecommerce exists, the app needs a real database
-  (e.g. Postgres via Neon/Supabase, or self-hosted Postgres) — there is
-  currently no database anywhere in this project.
+- Once a scraper, ecommerce, or the auth/presence plan above exists, the
+  app needs a real database. Leaning **Supabase** specifically since it
+  would also cover auth and realtime presence in the same service — there
+  is currently no database anywhere in this project.

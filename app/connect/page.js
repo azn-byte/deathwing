@@ -12,6 +12,10 @@ const experiments = [
 
 export const metadata = { title: "Connect · the lab" };
 
+// Shows the visitor's live profile (ProfileCard/DiscordCard) — must never
+// be served from a stale static cache.
+export const dynamic = "force-dynamic";
+
 export default function ConnectPage() {
   return (
     <section className="mx-auto max-w-5xl px-6 py-12 sm:px-10 lg:px-14">

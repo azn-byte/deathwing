@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, saveSession, generateSessionId } from "@/lib/session";
+import { createClient } from "@/lib/supabase/client";
 import { CONNECTIONS } from "@/lib/connections";
 
 const PATHS = [
@@ -28,40 +28,121 @@ const emptyConnections = () =>
 
 export default function EnterPage() {
   const router = useRouter();
+  const [supabase] = useState(() => createClient());
+  const [status, setStatus] = useState("loading");
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [handle, setHandle] = useState("");
   const [path, setPath] = useState(null);
   const [connections, setConnections] = useState(emptyConnections);
-  const [existing, setExisting] = useState(undefined);
 
   useEffect(() => {
-    setExisting(getSession());
-  }, []);
+    let active = true;
+
+    async function load() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        if (active) setStatus("signed-out");
+        return;
+      }
+
+      setUser(user);
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!active) return;
+      if (existingProfile) {
+        setProfile(existingProfile);
+        setStatus("ready");
+      } else {
+        setStatus("needs-profile");
+      }
+    }
+
+    load();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => load());
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const signInWithDiscord = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: {
+        scopes: "guilds.join",
+        redirectTo: `${window.location.origin}/auth/callback?next=/enter`,
+      },
+    });
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+    setStatus("signed-out");
+  };
 
   const canSubmit = handle.trim().length > 0 && path;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || !user) return;
     const trimmedConnections = Object.fromEntries(
       Object.entries(connections).map(([k, v]) => [k, v.trim()])
     );
-    saveSession({
-      id: generateSessionId(),
-      handle: handle.trim(),
-      path,
-      connections: trimmedConnections,
-      startedAt: new Date().toISOString(),
-    });
-    router.push("/");
+    const { data, error } = await supabase
+      .from("profiles")
+      .insert({ id: user.id, handle: handle.trim(), path, connections: trimmedConnections })
+      .select()
+      .single();
+
+    if (!error) {
+      setProfile(data);
+      setStatus("ready");
+      router.push("/");
+    }
   };
 
-  if (existing === undefined) return null;
+  if (status === "loading") return null;
 
-  if (existing) {
-    const pathLabel = PATHS.find((p) => p.id === existing.path)?.label ?? existing.path;
-    const filledConnections = CONNECTIONS.filter(
-      (c) => existing.connections?.[c.key]
+  if (status === "signed-out") {
+    return (
+      <section className="mx-auto max-w-lg px-6 py-24 text-center sm:px-10">
+        <p className="font-mono text-sm text-white/40">
+          TERMINAL 01 <span className="animate-pulse">_</span>
+        </p>
+        <h1 className="mt-4 text-3xl font-medium tracking-tight">
+          Sign in to enter the lab.
+        </h1>
+        <p className="mt-2 text-white/50">
+          A real account now, not just this browser — your profile follows
+          you to any device you sign in from.
+        </p>
+        <button
+          onClick={signInWithDiscord}
+          className="mt-8 rounded-full bg-white px-6 py-3 text-sm font-medium text-black hover:bg-white/90"
+        >
+          Sign in with Discord
+        </button>
+      </section>
     );
+  }
+
+  if (status === "ready" && profile) {
+    const pathLabel = PATHS.find((p) => p.id === profile.path)?.label ?? profile.path;
+    const filledConnections = CONNECTIONS.filter((c) => profile.connections?.[c.key]);
 
     return (
       <section className="mx-auto max-w-lg px-6 py-24 text-center sm:px-10">
@@ -69,12 +150,12 @@ export default function EnterPage() {
           TERMINAL 01 <span className="animate-pulse">_</span>
         </p>
         <h1 className="mt-4 text-3xl font-medium tracking-tight">
-          Welcome back, {existing.handle}.
+          Welcome back, {profile.handle}.
         </h1>
         <p className="mt-2 text-white/50">Logged in as the {pathLabel}.</p>
-        {existing.id && (
-          <p className="mt-1 font-mono text-xs text-white/30">ID {existing.id}</p>
-        )}
+        <p className="mt-1 font-mono text-xs text-white/30">
+          ID {profile.id.slice(0, 8).toUpperCase()}
+        </p>
 
         <div className="mt-8 text-left">
           <p className="font-mono text-xs uppercase tracking-widest text-white/40">
@@ -87,7 +168,7 @@ export default function EnterPage() {
               {filledConnections.map((c) => (
                 <li key={c.key} className="flex justify-between border-b border-white/10 py-2 text-sm">
                   <span className="text-white/50">{c.label}</span>
-                  <span>{existing.connections[c.key]}</span>
+                  <span>{profile.connections[c.key]}</span>
                 </li>
               ))}
             </ul>
@@ -95,10 +176,10 @@ export default function EnterPage() {
         </div>
 
         <button
-          onClick={() => setExisting(null)}
+          onClick={signOut}
           className="mt-8 rounded-full border border-white/20 px-6 py-3 text-sm font-medium hover:border-white/40"
         >
-          Start a new session
+          Sign out
         </button>
       </section>
     );
@@ -113,7 +194,8 @@ export default function EnterPage() {
         Create your visitor profile.
       </h1>
       <p className="mt-2 text-white/50">
-        No account needed yet — this just remembers you on this device.
+        Signed in with Discord as {user?.user_metadata?.full_name || user?.email}.
+        One more step.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-10 space-y-8">
@@ -158,9 +240,7 @@ export default function EnterPage() {
             03 — Connections (optional)
           </label>
           <p className="mt-2 text-xs text-white/40">
-            Self-reported, not verified. Leave anything blank — and note
-            this stays on your device only, not shared with other visitors
-            yet.
+            Self-reported, not verified. Leave anything blank.
           </p>
           <div className="mt-3 space-y-4">
             {CONNECTIONS.map((c) => (

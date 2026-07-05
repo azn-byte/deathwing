@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getSession } from "@/lib/session";
+import { useProfile } from "@/lib/useProfile";
 import { CONNECTIONS } from "@/lib/connections";
 
 const PATH_LABELS = {
@@ -12,33 +11,29 @@ const PATH_LABELS = {
 };
 
 export default function ProfileCard() {
-  const [session, setSession] = useState(undefined);
+  const { loading, profile } = useProfile();
 
-  useEffect(() => {
-    setSession(getSession());
-  }, []);
+  if (loading) return null;
 
-  if (session === undefined) return null;
-
-  if (!session) {
+  if (!profile) {
     return (
       <div className="mb-12 rounded-sm border border-white/10 p-6">
         <p className="text-sm text-white/50">
-          No profile yet — create one to show up here as you move through
-          the site.
+          No profile yet — sign in to show up here as you move through the
+          site.
         </p>
         <Link
           href="/enter"
           className="mt-3 inline-block text-sm text-white/70 underline underline-offset-4 hover:text-white"
         >
-          Create your profile →
+          Sign in →
         </Link>
       </div>
     );
   }
 
-  const pathLabel = PATH_LABELS[session.path] ?? session.path;
-  const filledConnections = CONNECTIONS.filter((c) => session.connections?.[c.key]);
+  const pathLabel = PATH_LABELS[profile.path] ?? profile.path;
+  const filledConnections = CONNECTIONS.filter((c) => profile.connections?.[c.key]);
 
   return (
     <div className="mb-12 rounded-sm border border-white/10 p-6">
@@ -48,19 +43,19 @@ export default function ProfileCard() {
             Tracked as
           </p>
           <h2 className="mt-1 text-xl font-medium tracking-tight">
-            {session.handle} <span className="text-white/40">· {pathLabel}</span>
+            {profile.handle} <span className="text-white/40">· {pathLabel}</span>
           </h2>
         </div>
-        {session.id && (
-          <span className="font-mono text-xs text-white/30">ID {session.id}</span>
-        )}
+        <span className="font-mono text-xs text-white/30">
+          ID {profile.id.slice(0, 8).toUpperCase()}
+        </span>
       </div>
 
       {filledConnections.length > 0 && (
         <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
           {filledConnections.map((c) => (
             <li key={c.key} className="text-white/50">
-              {c.label}: <span className="text-white">{session.connections[c.key]}</span>
+              {c.label}: <span className="text-white">{profile.connections[c.key]}</span>
             </li>
           ))}
         </ul>

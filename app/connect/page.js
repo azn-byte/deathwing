@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ProfileCard from "@/components/ProfileCard";
+import DiscordCard from "@/components/DiscordCard";
 
 const experiments = [
   {
@@ -25,6 +26,7 @@ export default function ConnectPage() {
       </p>
 
       <ProfileCard />
+      <DiscordCard />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {experiments.map((exp) => (

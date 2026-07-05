@@ -38,20 +38,26 @@ app/
   page.js                    Home page — see "Homepage" below, not a nav summary
   gallery/page.js             Gallery — reads images from public/images/gallery
   prints/page.js               Prints storefront — lists photos from lib/prints.js
-  connect/page.js              Profile card + list of experiments (renamed from "Experiments")
+  connect/page.js              Profile card + Discord card + list of experiments
   connect/sketch-pad/          Example experiment: canvas drawing toy
-  enter/page.js                Character-creation "login" (see below)
+  enter/page.js                Real login (Discord via Supabase Auth, see below)
+  auth/callback/route.js       OAuth callback — exchanges code for session, triggers Discord auto-join
 components/Nav.js             Top nav bar — adds top margin on "/" to clear the fixed ticker
 components/VisitorBadge.js    Persistent bottom-right badge, shown site-wide once a profile exists
                                 (sits higher on "/" to clear the fixed status bar)
 components/HomeExperience.js  The homepage's "system" identity — see below
 components/ProfileCard.js     Full profile display, used on /connect
+components/DiscordCard.js     Discord sign-in/join card, used on /connect
 components/PrintCard.js       Prints storefront card — license toggle + price display
 components/HomeSketchTeaser.js  Live drawable canvas embedded on the homepage
+lib/supabase/client.js        Browser Supabase client
+lib/supabase/server.js        Server Supabase client (Server Components, route handlers)
+lib/useProfile.js             Client hook: { loading, user, profile } from real Supabase auth
 lib/images.js                 Reads public/images/gallery at request time for the gallery page
 lib/prints.js                 Manually curated list of photos for sale (image + price + license terms)
-lib/session.js                Client-side-only visitor session (localStorage) — see below
 lib/connections.js            CRM-style profile field definitions (see below)
+middleware.js                 Refreshes the Supabase auth session cookie on every request
+supabase-schema.sql            profiles table + RLS policies — run once in Supabase's SQL Editor
 public/images/gallery/        Drop image files here — they show up in the gallery automatically
 public/images/prints/         Photos listed on /prints (must also be added to lib/prints.js)
 ```
@@ -79,9 +85,9 @@ Vice" and green read as "too Matrix cliché"):
   later without disturbing them.
 - The stats are real, not decorative: gallery piece count comes from
   `getGalleryImages().length`, not a hardcoded number.
-- The hero headline is dynamic: reads real session data
-  (`lib/session.js`) to show "Welcome back, {handle}" if a profile
-  exists, or an invite ("Images, curated and made.") if not.
+- The hero headline is dynamic: reads the real signed-in profile
+  (`lib/useProfile.js`) to show "Welcome back, {handle}" if one exists,
+  or an invite ("Images, curated and made.") if not.
 - A grayscale-only "glitch" effect on the headline — two offset light/
   dark-grey duplicate layers that flicker briefly on a timer, plus a
   custom cursor-follow ring — texture and motion carry the "system" feel
@@ -95,27 +101,73 @@ plain base theme so the "system" chrome never competes with viewing
 images or buying a print. Don't apply the ticker/status-bar/glitch
 treatment to other pages without deciding that deliberately.
 
-### Visitor profile / "login" (`/enter`)
+### Visitor profile / login (`/enter`) — real auth, built 2026-07-05
 
-Inspired by [cybercafe.tw](https://cybercafe.tw) (a net-art piece styled as
-a 2000s internet cafe login) — a game-like "create your character" flow
-instead of a boring form: pick a handle, pick a path (Collector / Creator /
-Wanderer). **Status: local-only, no real backend.** It writes to
-`localStorage` via `lib/session.js` so it remembers you on one device —
-there is no account, no server, and nothing is shared between visitors yet.
+Originally a local-only, game-like "create your character" flow (inspired
+by [cybercafe.tw](https://cybercafe.tw)) that just wrote to `localStorage`.
+**Upgraded to real accounts** after that got annoying to re-enter across
+browsers/devices. Now: **Sign in with Discord** (via Supabase Auth), and
+your profile (handle, path, connections) lives in a real Postgres table
+(`profiles`, see `supabase-schema.sql`), not a per-browser sticky note.
+
+- `lib/supabase/client.js` / `server.js` — browser and server Supabase
+  clients (`@supabase/ssr`)
+- `middleware.js` — refreshes the auth session cookie on every request
+- `app/auth/callback/route.js` — exchanges the OAuth code for a session
+  after Discord redirects back
+- `lib/useProfile.js` — client hook returning `{ loading, user, profile }`,
+  used by `VisitorBadge`, `ProfileCard`, `HomeExperience`, and `/enter`
+  itself. This replaced the old `lib/session.js` (deleted) everywhere.
+- `profiles` table has row-level security: a user can only read/write
+  their own row (`auth.uid() = id`). Nothing is visible to other visitors
+  yet — that's a deliberate later step, not an oversight.
+- The "ID" shown in the UI is the real Supabase user UUID (truncated to 8
+  chars for display), not a fake generated one.
 
 Also includes an optional "Connections" step (`lib/connections.js`) — CRM
 style, plain self-reported text fields (League of Legends summoner name,
-Discord, Steam), not OAuth-verified. Blank fields are simply omitted when
-viewing a profile rather than shown empty. Chosen deliberately over real
-OAuth for Steam/Discord/Riot because Riot's "Sign in with Riot" requires an
-approved production API key from Riot Games (manual review, not self-serve)
-— manual text fields work today for all three without waiting on that.
+Discord, Steam), not OAuth-verified beyond the Discord sign-in itself.
+Blank fields are simply omitted when viewing a profile rather than shown
+empty. Riot's "Sign in with Riot" (RSO) still requires an approved
+production API key from Riot Games (manual review, not self-serve) — the
+League field stays a manual text entry for that reason.
 
-Each profile also gets a `generateSessionId()` ID (`lib/session.js`) —
-labeled as a per-browser session ID, not a global visitor count, since
-there's no backend to actually count visitors yet. Don't let this drift
-into implying real visitor numbers before Supabase exists.
+**Setting this up on a fresh environment/machine** requires, in order:
+1. `npx vercel integration add supabase` (provisions Postgres + auth,
+   auto-injects env vars into the Vercel project)
+2. Run `supabase-schema.sql` once in the Supabase Dashboard's SQL Editor
+3. Register a Discord application (discord.com/developers/applications),
+   enable the Discord provider in Supabase Auth with its Client ID/Secret,
+   and add Supabase's callback URL to the Discord app's OAuth2 redirects
+4. `vercel env pull --environment=preview` locally — **note**: env vars
+   pulled down empty (just `""`) the first time here because the
+   Supabase integration had marked them "sensitive," which blocks
+   `vercel env pull` from ever reading them back. Fixed by re-adding them
+   with `vercel env add <name> preview` and answering "no" to "Store as
+   sensitive?" — for `NEXT_PUBLIC_*` vars this costs nothing since
+   Next.js inlines them into the public JS bundle regardless.
+
+### Discord auto-join (built 2026-07-05)
+
+Signing in with Discord also adds the visitor to the site owner's Discord
+server in the same step, via the `guilds.join` OAuth scope:
+- `app/enter/page.js` and `components/DiscordCard.js` request
+  `scopes: "guilds.join"` when calling `signInWithOAuth`
+- `app/auth/callback/route.js` reads `session.provider_token` (the
+  visitor's fresh Discord access token, only available right at the
+  OAuth callback — Supabase doesn't persist it) and calls Discord's
+  `PUT /guilds/{guild_id}/members/{user_id}` as the bot, passing that
+  token. Best-effort: failures (already a member, bot missing
+  permissions) don't block sign-in.
+- Requires a bot added to the Discord application (Developer Portal →
+  Bot tab) invited into the target server, plus `DISCORD_BOT_TOKEN` and
+  `DISCORD_GUILD_ID` env vars (see `.env.example`).
+- **Important limitation**: auto-join only fires at sign-in time. Someone
+  already signed in before this scope was added won't be retroactively
+  added — there's no stored token to do it with. That's why
+  `components/DiscordCard.js` (on `/connect`) also always shows a plain
+  invite link (`https://discord.gg/xSQQCFHBcB`) as a fallback for anyone
+  the auto-join missed, or who'd rather not sign in at all.
 
 ### Connect (`/connect`, renamed from "Experiments" 2026-07-04)
 
@@ -238,13 +290,16 @@ plain `vercel` CLI commands shown above.
 Planned but not implemented — noting here so this doesn't get re-derived
 from scratch later:
 
-- **Discord link** (superseded 2026-07-04): originally scoped as just a
-  link/button. Now folded into the auth plan below instead — Discord OAuth
-  via Supabase Auth covers "sign in with Discord" and the link in one step.
-- **Real auth + live presence** (started 2026-07-04): see "Visitor
-  profile / login" section above for what's built (`/enter`, local-only)
-  and the full 3-step plan (character UI → Supabase auth → WoW-style
-  live presence HUD). Steps 2 and 3 are not started.
+- **Discord link** (superseded 2026-07-04, done 2026-07-05): Discord OAuth
+  via Supabase Auth now covers "sign in with Discord" — see "Visitor
+  profile / login" above. Also grew into auto-joining the site's Discord
+  server on sign-in ("Discord auto-join" section above) plus a
+  `DiscordCard` invite fallback on `/connect` — more than originally
+  scoped, but the natural extension once real auth existed.
+- **Real auth + live presence**: 3-step plan (character UI → Supabase
+  auth → WoW-style live presence HUD). **Steps 1 and 2 are done** — see
+  "Visitor profile / login" above. Step 3 (a live "N people here /
+  browsing gallery" HUD via Supabase Realtime Presence) is not started.
 - **Two separate galleries, not one** (decided 2026-07-04): the current
   `/gallery` is a curated/fan-art gallery (Marvel, anime, etc.) — read-only,
   eventually scraper-fed. Personal photography is a different thing
@@ -272,14 +327,14 @@ from scratch later:
 - **"Experiments" → "Connect" rename/reframe** (idea logged 2026-07-04,
   route renamed same day — see "Connect" section above): two distinct
   sub-features under one name:
-  - **Account linking + persistent profile (built 2026-07-04):** CRM-style
-    text fields on `/enter`, now also surfaced on `/connect` via
-    `ProfileCard` and site-wide via `VisitorBadge`. This is the pragmatic
-    v1, not the final form. Still relevant for later: real OAuth (Steam
-    self-serve, Discord via Supabase Auth) would let these be verified
-    instead of self-reported, and **Riot specifically** requires an
-    approved production API key from Riot Games (manual review, not
-    self-serve) if that upgrade ever happens. Not blocking anything today.
+  - **Account linking + persistent profile (built 2026-07-04, upgraded to
+    real Discord auth 2026-07-05):** CRM-style text fields on `/enter`,
+    surfaced on `/connect` via `ProfileCard` and site-wide via
+    `VisitorBadge`. Discord is now a real verified sign-in (not
+    self-reported) via Supabase Auth. League of Legends and Steam remain
+    self-reported text — Steam has self-serve OAuth if that's wanted
+    later, and **Riot specifically** still requires an approved
+    production API key from Riot Games (manual review, not self-serve).
   - **Photo challenges with approval queue** (refined 2026-07-04, not
     started, explicitly deferred by user — "let's figure that out later"):
     not open UGC. The real shape: user posts a topic for a recurring photo

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { getSession } from "@/lib/session";
+import { useProfile } from "@/lib/useProfile";
 import HomeSketchTeaser from "@/components/HomeSketchTeaser";
 
 const GLITCH_LIGHT = "#e5e5e5";
@@ -214,11 +214,10 @@ function SpotlightImage({ src, alt }) {
 }
 
 export default function HomeExperience({ galleryCount, pinnedImages, featuredPrint }) {
-  const [session, setSession] = useState(undefined);
+  const { loading, profile } = useProfile();
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setSession(getSession());
     const t = setTimeout(() => setLoaded(true), 60);
     return () => clearTimeout(t);
   }, []);
@@ -230,18 +229,18 @@ export default function HomeExperience({ galleryCount, pinnedImages, featuredPri
       <Marquee />
 
       <section className="px-6 pb-16 pt-10 sm:px-10 lg:px-14 lg:pt-20">
-        {session === undefined ? null : (
+        {loading ? null : (
           <div
             className={`transition-all duration-700 ease-out ${
               loaded ? "translate-y-0 opacity-100 blur-none" : "translate-y-4 opacity-0 blur-md"
             }`}
           >
             <p className="text-xs font-medium uppercase tracking-[0.3em] text-white/40">
-              01 — {session ? "Session restored" : "Connection verified"}
+              01 — {profile ? "Session restored" : "Connection verified"}
             </p>
             <GlitchHeading>
-              {session ? (
-                <>Welcome back, {session.handle}.</>
+              {profile ? (
+                <>Welcome back, {profile.handle}.</>
               ) : (
                 <>
                   Images,
@@ -260,9 +259,9 @@ export default function HomeExperience({ galleryCount, pinnedImages, featuredPri
             <div className="mt-10 max-w-sm rounded-sm border border-white/10 bg-white/[0.02] p-4 font-mono text-xs text-white/50 backdrop-blur">
               <p>gallery.dat ..... loaded</p>
               <p>prints.dat ....... loaded</p>
-              {session ? (
+              {profile ? (
                 <>
-                  <p>session_id ...... {session.id ?? "unknown"}</p>
+                  <p>session_id ...... {profile.id.slice(0, 8).toUpperCase()}</p>
                   <p className="text-white/80">user_status ..... recognized</p>
                 </>
               ) : (

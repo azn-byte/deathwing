@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getSession } from "@/lib/session";
+import { useProfile } from "@/lib/useProfile";
 
 const PATH_LABELS = {
   collector: "Collector",
@@ -13,15 +12,11 @@ const PATH_LABELS = {
 
 export default function VisitorBadge() {
   const pathname = usePathname();
-  const [session, setSession] = useState(null);
+  const { profile } = useProfile();
 
-  useEffect(() => {
-    setSession(getSession());
-  }, [pathname]);
+  if (!profile) return null;
 
-  if (!session) return null;
-
-  const pathLabel = PATH_LABELS[session.path] ?? session.path;
+  const pathLabel = PATH_LABELS[profile.path] ?? profile.path;
   const isHome = pathname === "/";
 
   return (
@@ -31,8 +26,8 @@ export default function VisitorBadge() {
         isHome ? "bottom-14" : "bottom-6"
       }`}
     >
-      {session.handle} · {pathLabel}
-      {session.id && <span className="text-white/30"> · {session.id}</span>}
+      {profile.handle} · {pathLabel}
+      <span className="text-white/30"> · {profile.id.slice(0, 8).toUpperCase()}</span>
     </Link>
   );
 }

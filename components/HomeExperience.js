@@ -118,24 +118,6 @@ function GlitchHeading({ children }) {
   );
 }
 
-function ScrollCue() {
-  return (
-    <div className="mt-16 flex items-center gap-3 text-xs uppercase tracking-widest text-white/40">
-      <span className="scroll-cue inline-block h-8 w-px bg-white/40" />
-      Scroll
-      <style jsx>{`
-        .scroll-cue {
-          animation: scroll-cue 1.8s ease-in-out infinite;
-        }
-        @keyframes scroll-cue {
-          0%, 100% { opacity: 0.2; transform: scaleY(0.6); transform-origin: top; }
-          50% { opacity: 1; transform: scaleY(1); transform-origin: top; }
-        }
-      `}</style>
-    </div>
-  );
-}
-
 function Counter({ to, label }) {
   const ref = useRef(null);
   const [value, setValue] = useState(0);
@@ -290,8 +272,6 @@ export default function HomeExperience({ galleryCount, pinnedImages, featuredPri
                 </>
               )}
             </div>
-
-            <ScrollCue />
           </div>
         )}
       </section>
